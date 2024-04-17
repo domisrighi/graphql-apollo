@@ -1,6 +1,6 @@
 type Query {
   "Playlists hand-picked to be featured to all users."
-  featurePlaylists: [Playlist!]!
+  featuredPlaylists: [Playlist!]!
 }
 
 "A curated collection of tracks designed for a specific activity or mood."
