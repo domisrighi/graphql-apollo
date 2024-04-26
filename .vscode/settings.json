@@ -1,0 +1,5 @@
+{
+  "workbench.settings.enableNaturalLanguageSearch": false,
+  "gitlens.views.searchAndCompare.pullRequests.showForCommits": true,
+  "gitlens.views.searchAndCompare.pullRequests.enabled": true
+}

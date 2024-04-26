@@ -1,4 +1,5 @@
 import { GraphQLResolveInfo } from 'graphql';
+import { PlaylistModel, TrackModel } from './models';
 import { DataSourceContext } from './context';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -7,6 +8,8 @@ export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: 
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
 export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
+export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
+export type RequireFields<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: NonNullable<T[P]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: { input: string; output: string; }
@@ -14,6 +17,17 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
+};
+
+export type Mutation = {
+  __typename?: 'Mutation';
+  /** Add one or more items to a user's playlist. */
+  addItemsToPlaylist: AddItemsToPlaylistPayload;
+};
+
+
+export type MutationAddItemsToPlaylistArgs = {
+  input: AddItemsToPlaylistInput;
 };
 
 /** A curated collection of tracks designed for a specific activity or mood. */
@@ -25,12 +39,53 @@ export type Playlist = {
   id: Scalars['ID']['output'];
   /** The name of the playlist. */
   name: Scalars['String']['output'];
+  tracks: Array<Track>;
 };
 
 export type Query = {
   __typename?: 'Query';
   /** Playlists hand-picked to be featured to all users. */
   featuredPlaylists: Array<Playlist>;
+  playlist?: Maybe<Playlist>;
+};
+
+
+export type QueryPlaylistArgs = {
+  id: Scalars['ID']['input'];
+};
+
+/** A single audio file, usually a song. */
+export type Track = {
+  __typename?: 'Track';
+  /** The track length in milliseconds. */
+  duration_ms: Scalars['Int']['output'];
+  /** Whether or not the track has explicit lyrics (true = yes it does; false = no it does not OR unknown) */
+  explicit: Scalars['Boolean']['output'];
+  /** The ID for the track. */
+  id: Scalars['ID']['output'];
+  /** The name of the track */
+  name: Scalars['String']['output'];
+  /** The URI for the track, usually a Spotify link. */
+  uri: Scalars['String']['output'];
+};
+
+export type AddItemsToPlaylistInput = {
+  /** The ID of the playlist. */
+  playlistId: Scalars['ID']['input'];
+  /** A comma-separated list of Spotify URIs to add. */
+  uris: Array<Scalars['String']['input']>;
+};
+
+export type AddItemsToPlaylistPayload = {
+  __typename?: 'addItemsToPlaylistPayload';
+  /** Similar to HTTP status code, represents the status of the mutation */
+  code: Scalars['Int']['output'];
+  /** Human-readable message for the UI */
+  message: Scalars['String']['output'];
+  /** The playlist that contains the newly added items */
+  playlist?: Maybe<Playlist>;
+  /** Indicates whether the mutation was successful */
+  success: Scalars['Boolean']['output'];
 };
 
 
@@ -106,33 +161,69 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
-  Playlist: ResolverTypeWrapper<Playlist>;
+  Int: ResolverTypeWrapper<Scalars['Int']['output']>;
+  Mutation: ResolverTypeWrapper<{}>;
+  Playlist: ResolverTypeWrapper<PlaylistModel>;
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
+  Track: ResolverTypeWrapper<TrackModel>;
+  addItemsToPlaylistInput: AddItemsToPlaylistInput;
+  addItemsToPlaylistPayload: ResolverTypeWrapper<Omit<AddItemsToPlaylistPayload, 'playlist'> & { playlist?: Maybe<ResolversTypes['Playlist']> }>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   Boolean: Scalars['Boolean']['output'];
   ID: Scalars['ID']['output'];
-  Playlist: Playlist;
+  Int: Scalars['Int']['output'];
+  Mutation: {};
+  Playlist: PlaylistModel;
   Query: {};
   String: Scalars['String']['output'];
+  Track: TrackModel;
+  addItemsToPlaylistInput: AddItemsToPlaylistInput;
+  addItemsToPlaylistPayload: Omit<AddItemsToPlaylistPayload, 'playlist'> & { playlist?: Maybe<ResolversParentTypes['Playlist']> };
+};
+
+export type MutationResolvers<ContextType = DataSourceContext, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
+  addItemsToPlaylist?: Resolver<ResolversTypes['addItemsToPlaylistPayload'], ParentType, ContextType, RequireFields<MutationAddItemsToPlaylistArgs, 'input'>>;
 };
 
 export type PlaylistResolvers<ContextType = DataSourceContext, ParentType extends ResolversParentTypes['Playlist'] = ResolversParentTypes['Playlist']> = {
   description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  tracks?: Resolver<Array<ResolversTypes['Track']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type QueryResolvers<ContextType = DataSourceContext, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   featuredPlaylists?: Resolver<Array<ResolversTypes['Playlist']>, ParentType, ContextType>;
+  playlist?: Resolver<Maybe<ResolversTypes['Playlist']>, ParentType, ContextType, RequireFields<QueryPlaylistArgs, 'id'>>;
+};
+
+export type TrackResolvers<ContextType = DataSourceContext, ParentType extends ResolversParentTypes['Track'] = ResolversParentTypes['Track']> = {
+  duration_ms?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  explicit?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  uri?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type AddItemsToPlaylistPayloadResolvers<ContextType = DataSourceContext, ParentType extends ResolversParentTypes['addItemsToPlaylistPayload'] = ResolversParentTypes['addItemsToPlaylistPayload']> = {
+  code?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  playlist?: Resolver<Maybe<ResolversTypes['Playlist']>, ParentType, ContextType>;
+  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type Resolvers<ContextType = DataSourceContext> = {
+  Mutation?: MutationResolvers<ContextType>;
   Playlist?: PlaylistResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
+  Track?: TrackResolvers<ContextType>;
+  addItemsToPlaylistPayload?: AddItemsToPlaylistPayloadResolvers<ContextType>;
 };
 
